@@ -1,5 +1,5 @@
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use ratatui::{Frame, layout::{Constraint, Layout}, run, style::{Color, Modifier, Style}, widgets::{Block, List, ListItem, Paragraph}};
+use ratatui::{Frame, layout::{Constraint, Layout}, run, style::{Color, Modifier, Style}, widgets::{Block, List, ListItem, ListState, Paragraph}};
 use rodio::{self, Decoder, Player};
 use std::{
     fs::{self, File},
@@ -61,10 +61,6 @@ fn draw(frame: &mut Frame, app: &App) {
 
         let mut style = Style::default();
 
-        if index == app.selected_song_index() {
-            style = style.bg(Color::LightBlue);
-        }
-
         if Some(index) == app.playing_song_index() {
             style = style.fg(Color::Green);
         }
@@ -73,13 +69,25 @@ fn draw(frame: &mut Frame, app: &App) {
     })
     .collect::<Vec<_>>();
 
+    let playlist_widget =  List::new(playlist)
+          .block(Block::bordered().title("Playlist"))
+          .highlight_style(
+              Style::default().bg(Color::Cyan),
+          );
+
+    let mut playlist_state = ListState::default();
+
+    playlist_state.select(
+        Some(app.selected_song_index()),
+    );
+
   frame.render_widget(Block::bordered().title("Aki Music Player"), title_area);
   frame.render_widget(Block::bordered().title(status), status_area);
-  frame.render_widget(
-       List::new(playlist)
-           .block(Block::bordered().title("Playlist")),
-       left_area,
-   );
+  frame.render_stateful_widget(
+      playlist_widget,
+      left_area,
+      &mut playlist_state,
+  );
 }
 
 fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
