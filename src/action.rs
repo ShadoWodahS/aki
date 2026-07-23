@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crossterm::event::{KeyCode, KeyEvent};
 
 pub enum Action {
@@ -6,6 +8,11 @@ pub enum Action {
     Next,
     Prev,
     Play,
+    FastForward,
+    Rewind,
+    PlayNext,
+    UpdateCurrentPos(Duration),
+    UpdateTotalDuration(Duration),
 }
 
 pub fn map_key(key: KeyEvent) -> Option<Action> {
@@ -15,6 +22,8 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('j') => Some(Action::Next),
         KeyCode::Char('k') => Some(Action::Prev),
         KeyCode::Char('c') => Some(Action::Play),
+        KeyCode::Char('h') => Some(Action::Rewind),
+        KeyCode::Char('l') => Some(Action::FastForward),
         _ => None,
     }
 }
