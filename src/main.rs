@@ -29,7 +29,7 @@ fn main() -> io::Result<()> {
     let device = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
     let player = Player::connect_new(&device.mixer());
 
-    run(|mut terminal| {
+    run(|terminal| {
         loop {
             terminal.draw(|frame| draw(frame, &app))?;
 
