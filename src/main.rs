@@ -34,16 +34,6 @@ fn main() -> io::Result<()> {
             }
         }
     })
-
-    // let selected_path = &entries[choice];
-
-    // println!("selected path: {}", selected_path.display());
-
-    // let file = File::open(selected_path).unwrap();
-
-    // player.sleep_until_end();
-
-    // Ok(())
 }
 
 fn draw(frame: &mut Frame, app: &App) {
