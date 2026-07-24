@@ -1,10 +1,10 @@
-use crossterm::event::{self, Event, KeyEventKind};
+use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::{
     Frame,
     layout::{Constraint, Layout},
     run,
     style::{Color, Style},
-    widgets::{Block, List, ListItem, ListState},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 use rodio::{self, Decoder, Player, Source};
 use std::{
@@ -15,7 +15,10 @@ use std::{
 };
 
 mod action;
-use crate::action::{Action, map_key};
+use crate::action::{
+    Action::{self},
+    map_key, map_key_in_search_mode,
+};
 mod app;
 use crate::app::App;
 
@@ -36,7 +39,7 @@ fn main() -> io::Result<()> {
             if event::poll(Duration::from_millis(100))? {
                 match event::read()? {
                     Event::Key(key) if key.kind == KeyEventKind::Press => {
-                        do_action(map_key(key), &mut app, &player)
+                        do_action_by_key(key, &mut app, &player)
                     }
                     _ => {}
                 }
@@ -62,8 +65,8 @@ fn main() -> io::Result<()> {
 fn draw(frame: &mut Frame, app: &App) {
     use Constraint::{Fill, Length, Min};
 
-    let vertical = Layout::vertical([Length(1), Min(0), Length(1)]);
-    let [title_area, main_area, status_area] = vertical.areas(frame.area());
+    let vertical = Layout::vertical([Length(1), Min(0), Length(1), Length(3)]);
+    let [title_area, main_area, status_area, search_area] = vertical.areas(frame.area());
     let horizontal = Layout::horizontal([Fill(1); 1]);
     let [left_area] = horizontal.areas(main_area);
 
@@ -111,65 +114,96 @@ fn draw(frame: &mut Frame, app: &App) {
     frame.render_widget(Block::new().title("Aki Music Player🦄"), title_area);
     frame.render_widget(Block::new().title(status), status_area);
     frame.render_stateful_widget(playlist_widget, left_area, &mut playlist_state);
+    if app.search_mode() {
+        let search_box = Paragraph::new(app.search_str()).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Search (Press Enter to search, Esc to cancel)"),
+        );
+        frame.render_widget(search_box, search_area);
+    }
+}
+
+fn do_action_by_key(key: KeyEvent, app: &mut App, player: &Player) {
+    let action = if app.search_mode() {
+        map_key_in_search_mode(key)
+    } else {
+        map_key(key)
+    };
+    do_action(action, app, player);
 }
 
 fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
-    match action {
-        Some(Action::Play) => {
-            player.clear();
-            let file = File::open(app.selected_song_path()).unwrap();
-            let source = Decoder::try_from(file).unwrap();
-            match source.total_duration() {
-                Some(total_duration) => app.update(Action::UpdateTotalDuration(total_duration)),
-                _ => {}
+    if app.search_mode() {
+        match action {
+            Some(Action::Search) => {
+                app.update(Action::Search);
+                app.update(Action::SearchNext(false));
             }
-
-            player.append(source);
-            player.play();
-            app.update(Action::Play);
-        }
-        Some(Action::TogglePause) => {
-            if app.is_playing() {
-                player.pause();
-            } else {
-                player.play();
+            Some(Action::SearchNext(_)) => {
+                app.update(Action::SearchNext(true));
             }
-            app.update(Action::TogglePause);
+            Some(action) => app.update(action),
+            _ => {}
         }
-        Some(Action::FastForward) => {
-            player
-                .try_seek(player.get_pos().saturating_add(Duration::from_secs(5)))
-                .unwrap();
-        }
-        Some(Action::Rewind) => {
-            player
-                .try_seek(player.get_pos().saturating_sub(Duration::from_secs(5)))
-                .unwrap();
-        }
-        Some(Action::PlayNext) => {
-            if app.is_playing() {
-                app.update(Action::PlayNext);
-                match app.playing_song_path() {
-                    Some(path) => {
-                        let file = File::open(path).unwrap();
-                        let source = Decoder::try_from(file).unwrap();
-                        match source.total_duration() {
-                            Some(total_duration) => {
-                                app.update(Action::UpdateTotalDuration(total_duration))
-                            }
-                            _ => {}
-                        }
-
-                        player.append(source);
-                        player.play();
-                    }
+    } else {
+        match action {
+            Some(Action::Play) => {
+                player.clear();
+                let file = File::open(app.selected_song_path()).unwrap();
+                let source = Decoder::try_from(file).unwrap();
+                match source.total_duration() {
+                    Some(total_duration) => app.update(Action::UpdateTotalDuration(total_duration)),
                     _ => {}
                 }
+
+                player.append(source);
+                player.play();
+                app.update(Action::Play);
             }
+            Some(Action::TogglePause) => {
+                if app.is_playing() {
+                    player.pause();
+                } else {
+                    player.play();
+                }
+                app.update(Action::TogglePause);
+            }
+            Some(Action::FastForward) => {
+                player
+                    .try_seek(player.get_pos().saturating_add(Duration::from_secs(5)))
+                    .unwrap();
+            }
+            Some(Action::Rewind) => {
+                player
+                    .try_seek(player.get_pos().saturating_sub(Duration::from_secs(5)))
+                    .unwrap();
+            }
+            Some(Action::PlayNext) => {
+                if app.is_playing() {
+                    app.update(Action::PlayNext);
+                    match app.playing_song_path() {
+                        Some(path) => {
+                            let file = File::open(path).unwrap();
+                            let source = Decoder::try_from(file).unwrap();
+                            match source.total_duration() {
+                                Some(total_duration) => {
+                                    app.update(Action::UpdateTotalDuration(total_duration))
+                                }
+                                _ => {}
+                            }
+
+                            player.append(source);
+                            player.play();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Some(action) => {
+                app.update(action);
+            }
+            _ => {}
         }
-        Some(action) => {
-            app.update(action);
-        }
-        _ => {}
     }
 }

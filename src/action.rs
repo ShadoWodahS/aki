@@ -13,6 +13,13 @@ pub enum Action {
     PlayNext,
     UpdateCurrentPos(Duration),
     UpdateTotalDuration(Duration),
+    StartSearch,
+    DelCharFromSearchStr,
+    AppendCharForSearchStr(char),
+    StopSearch,
+    Search,
+    SearchNext(bool),
+    SearchPrev,
 }
 
 pub fn map_key(key: KeyEvent) -> Option<Action> {
@@ -24,6 +31,19 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('c') => Some(Action::Play),
         KeyCode::Char('h') => Some(Action::Rewind),
         KeyCode::Char('l') => Some(Action::FastForward),
+        KeyCode::Char('/') => Some(Action::StartSearch),
+        KeyCode::Char('n') => Some(Action::SearchNext(true)),
+        KeyCode::Char('N') => Some(Action::SearchPrev),
+        _ => None,
+    }
+}
+
+pub fn map_key_in_search_mode(key: KeyEvent) -> Option<Action> {
+    match key.code {
+        KeyCode::Enter => Some(Action::Search),
+        KeyCode::Backspace => Some(Action::DelCharFromSearchStr),
+        KeyCode::Esc => Some(Action::StopSearch),
+        KeyCode::Char(c) => Some(Action::AppendCharForSearchStr(c)),
         _ => None,
     }
 }
