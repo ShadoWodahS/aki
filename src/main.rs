@@ -30,7 +30,7 @@ fn main() -> io::Result<()> {
     let mut app = App::new(playlist);
 
     let device = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
-    let player = Player::connect_new(&device.mixer());
+    let player = Player::connect_new(device.mixer());
 
     run(|terminal| {
         loop {
@@ -152,11 +152,9 @@ fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
                 player.clear();
                 let file = File::open(app.selected_song_path()).unwrap();
                 let source = Decoder::try_from(file).unwrap();
-                match source.total_duration() {
-                    Some(total_duration) => app.update(Action::UpdateTotalDuration(total_duration)),
-                    _ => {}
+                if let Some(total_duration) = source.total_duration() {
+                    app.update(Action::UpdateTotalDuration(total_duration));
                 }
-
                 player.append(source);
                 player.play();
                 app.update(Action::Play);
@@ -182,21 +180,15 @@ fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
             Some(Action::PlayNext) => {
                 if app.is_playing() {
                     app.update(Action::PlayNext);
-                    match app.playing_song_path() {
-                        Some(path) => {
-                            let file = File::open(path).unwrap();
-                            let source = Decoder::try_from(file).unwrap();
-                            match source.total_duration() {
-                                Some(total_duration) => {
-                                    app.update(Action::UpdateTotalDuration(total_duration))
-                                }
-                                _ => {}
-                            }
-
-                            player.append(source);
-                            player.play();
+                    if let Some(path) = app.playing_song_path() {
+                        let file = File::open(path).unwrap();
+                        let source = Decoder::try_from(file).unwrap();
+                        if let Some(total_duration) = source.total_duration() {
+                            app.update(Action::UpdateTotalDuration(total_duration));
                         }
-                        _ => {}
+
+                        player.append(source);
+                        player.play();
                     }
                 }
             }

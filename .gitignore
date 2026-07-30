@@ -1,3 +1,4 @@
 /target
 /musics
 *.exe
+.DS_STORE
