@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Constraint, Layout},
     run,
     style::{Color, Style},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, Gauge, List, ListItem, ListState, Paragraph},
 };
 use rodio::{self, Decoder, Player, Source};
 use std::{
@@ -65,7 +65,7 @@ fn main() -> io::Result<()> {
 fn draw(frame: &mut Frame, app: &App) {
     use Constraint::{Fill, Length, Min};
 
-    let vertical = Layout::vertical([Length(1), Min(0), Length(1), Length(3)]);
+    let vertical = Layout::vertical([Length(1), Min(0), Length(3), Length(3)]);
     let [title_area, main_area, status_area, search_area] = vertical.areas(frame.area());
     let horizontal = Layout::horizontal([Fill(1); 1]);
     let [left_area] = horizontal.areas(main_area);
@@ -92,7 +92,7 @@ fn draw(frame: &mut Frame, app: &App) {
 
     let playlist_widget = List::new(playlist)
         .block(Block::bordered().title("Playlist"))
-        .highlight_style(Style::default().bg(Color::Cyan));
+        .highlight_style(Style::default().bg(Color::DarkGray));
 
     let mut playlist_state = ListState::default();
 
@@ -111,8 +111,19 @@ fn draw(frame: &mut Frame, app: &App) {
         total_secs % 60
     );
 
+    let gauge = Gauge::default()
+        .block(Block::new().title(status).borders(Borders::ALL))
+        .gauge_style(Style::new().white().on_black().italic())
+        .percent(
+            current_secs
+                .checked_mul(100)
+                .and_then(|f| f.checked_div(total_secs))
+                .map(|v| v as u16)
+                .unwrap_or(0),
+        );
+
     frame.render_widget(Block::new().title("Aki Music Player🦄"), title_area);
-    frame.render_widget(Block::new().title(status), status_area);
+    frame.render_widget(gauge, status_area);
     frame.render_stateful_widget(playlist_widget, left_area, &mut playlist_state);
     if app.search_mode() {
         let search_box = Paragraph::new(app.search_str()).block(
