@@ -269,6 +269,10 @@ impl App {
                 }
             }
 
+            Action::Last => {
+                self.selected_song_index = self.playlist.len() - 1;
+            }
+
             _ => {}
         }
     }

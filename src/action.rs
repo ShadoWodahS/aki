@@ -7,6 +7,9 @@ pub enum Action {
     TogglePause,
     Next,
     Prev,
+    // TODO: gg needs key buffer with timeout
+    First,
+    Last,
     Play,
     FastForward,
     Rewind,
@@ -28,6 +31,7 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('p') => Some(Action::TogglePause),
         KeyCode::Char('j') => Some(Action::Next),
         KeyCode::Char('k') => Some(Action::Prev),
+        KeyCode::Char('G') => Some(Action::Last),
         KeyCode::Char('c') => Some(Action::Play),
         KeyCode::Char('h') => Some(Action::Rewind),
         KeyCode::Char('l') => Some(Action::FastForward),

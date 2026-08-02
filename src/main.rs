@@ -101,9 +101,12 @@ fn draw(frame: &mut Frame, app: &App) {
         .block(Block::bordered().title("Playlist"))
         .highlight_style(Style::default().bg(Color::DarkGray));
 
+    let playlist_area_height = (left_area.height - 2) as usize;
+
     let mut playlist_state = ListState::default();
 
     playlist_state.select(Some(app.selected_song_index()));
+    *playlist_state.offset_mut() = (app.selected_song_index().max(playlist_area_height / 2) - playlist_area_height / 2).min(app.playlist().len() - playlist_area_height);
 
     let (total_secs, current_secs) = (app.total_duration().as_secs(), app.current_pos().as_secs());
 
