@@ -26,7 +26,9 @@ use crate::app::App;
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    let musics_dir = args.get(2).map(String::as_str).unwrap_or("./musics");
+    let musics_dir = args.get(1).map(String::as_str).unwrap_or("./musics");
+
+    println!("musics_dir: {}", musics_dir);
 
     let playlist: Vec<PathBuf> = fs::read_dir(musics_dir)?
         .flat_map(|res| res.map(|e| e.path()).ok())
