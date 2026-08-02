@@ -12,6 +12,7 @@ use std::{
     io::{self},
     path::PathBuf,
     time::Duration,
+    env,
 };
 
 mod action;
@@ -23,7 +24,11 @@ mod app;
 use crate::app::App;
 
 fn main() -> io::Result<()> {
-    let playlist: Vec<PathBuf> = fs::read_dir("./musics")?
+    let args: Vec<String> = env::args().collect();
+
+    let musics_dir = args.get(2).map(String::as_str).unwrap_or("./musics");
+
+    let playlist: Vec<PathBuf> = fs::read_dir(musics_dir)?
         .flat_map(|res| res.map(|e| e.path()).ok())
         .collect();
 
@@ -119,7 +124,10 @@ fn draw(frame: &mut Frame, app: &App) {
                 .checked_mul(100)
                 .and_then(|f| f.checked_div(total_secs))
                 .map(|v| v as u16)
-                .unwrap_or(0),
+                .unwrap_or(0)
+                .min(0)
+                .max(100),
+
         );
 
     frame.render_widget(Block::new().title("Aki Music Player🦄"), title_area);
