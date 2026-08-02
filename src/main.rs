@@ -127,8 +127,7 @@ fn draw(frame: &mut Frame, app: &App) {
                 .and_then(|f| f.checked_div(total_secs))
                 .map(|v| v as u16)
                 .unwrap_or(0)
-                .min(0)
-                .max(100),
+                .clamp(0, 100)
 
         );
 
