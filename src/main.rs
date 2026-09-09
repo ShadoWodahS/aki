@@ -91,7 +91,7 @@ fn main() -> io::Result<()> {
 fn draw(frame: &mut Frame, app: &App) {
     use Constraint::{Fill, Length, Min};
 
-    let vertical = Layout::vertical([Length(1), Min(0), Length(3), Length(3)]);
+    let vertical = Layout::vertical([Length(1), Min(0), Length(3), Length(1)]);
     let [title_area, main_area, status_area, search_area] = vertical.areas(frame.area());
     let horizontal = Layout::horizontal([Fill(1); 1]);
     let [left_area] = horizontal.areas(main_area);
@@ -157,10 +157,8 @@ fn draw(frame: &mut Frame, app: &App) {
     frame.render_widget(gauge, status_area);
     frame.render_stateful_widget(playlist_widget, left_area, &mut playlist_state);
     if app.search_mode() {
-        let search_box = Paragraph::new(app.search_str()).block(
+        let search_box = Paragraph::new(format!("Search: {}", app.search_str())).block(
             Block::default()
-                .borders(Borders::ALL)
-                .title("Search (Press Enter to search, Esc to cancel)"),
         );
         frame.render_widget(search_box, search_area);
     }
