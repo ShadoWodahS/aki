@@ -23,6 +23,7 @@ pub enum Action {
     Search,
     SearchNext(bool),
     SearchPrev,
+    Delete,
 }
 
 pub fn map_key(key: KeyEvent) -> Option<Action> {
@@ -38,6 +39,7 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('/') => Some(Action::StartSearch),
         KeyCode::Char('n') => Some(Action::SearchNext(true)),
         KeyCode::Char('N') => Some(Action::SearchPrev),
+        KeyCode::Char('d') => Some(Action::Delete),
         _ => None,
     }
 }

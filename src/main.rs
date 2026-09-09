@@ -23,18 +23,19 @@ use crate::action::{
 mod app;
 use crate::app::App;
 
-fn main() -> io::Result<()> {
+fn get_playlist() -> io::Result<Vec<PathBuf>> {
     let args: Vec<String> = env::args().collect();
 
     let musics_dir = args.get(1).map(String::as_str).unwrap_or("./musics");
 
-    println!("musics_dir: {}", musics_dir);
-
     let playlist: Vec<PathBuf> = fs::read_dir(musics_dir)?
         .flat_map(|res| res.map(|e| e.path()).ok())
         .collect();
+    Ok(playlist)
+}
 
-    let mut app = App::new(playlist);
+fn main() -> io::Result<()> {
+    let mut app = App::new(get_playlist()?);
 
     let device = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
     let player = Player::connect_new(device.mixer());
@@ -214,6 +215,14 @@ fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
                         player.play();
                     }
                 }
+            }
+            Some(Action::Delete) => {
+                if app.playing_song_index() == Some(app.selected_song_index()) {
+                    player.clear();
+                }
+                fs::remove_file(app.selected_song_path()).unwrap();
+                app.update(Action::Delete);
+                app.refresh_playlist(get_playlist().unwrap());
             }
             Some(action) => {
                 app.update(action);

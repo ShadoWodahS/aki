@@ -33,6 +33,32 @@ impl App {
         }
     }
 
+    pub fn refresh_playlist(&mut self, playlist: Vec<PathBuf>) {
+        // Since playlist may add songs before current cursor,
+        // We should record current cursors as path.
+        // But what if current cursor's file path changed?
+        // We just consider the file was removed, so we back to 0
+
+        // And we don't care file removed by other way besides Action::Delete
+        // Cause OS don't allow remove the files is using(for us is playing)
+        
+        let current_selected_path = &self.playlist[self.selected_song_index];
+        let current_playing_path = &self.playing_song_index.and_then(|i| playlist.get(i));
+        if let Some(index) = playlist.iter().position(|x| x == current_selected_path) {
+            self.selected_song_index = index;
+        } else {
+            self.selected_song_index = 0;
+        }
+        
+        if let Some(index) = playlist.iter().position(|x| Some(x) == *current_playing_path) {
+            self.playing_song_index = Some(index);
+        } else {
+            self.playing_song_index = None;
+        }
+
+        self.playlist = playlist;
+    }
+
     pub fn is_playing(&self) -> bool {
         self.is_playing
     }
@@ -273,6 +299,13 @@ impl App {
                 self.selected_song_index = self.playlist.len() - 1;
             }
 
+            Action::Delete => {
+                if Some(self.selected_song_index) == self.playing_song_index {
+                    self.playing_song_index = None;
+                    self.is_playing = false;
+                }
+                self.selected_song_index = if self.selected_song_index > 0 { self.selected_song_index - 1 } else { 0 };
+            }
             _ => {}
         }
     }
