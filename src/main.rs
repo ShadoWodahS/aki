@@ -28,8 +28,26 @@ fn get_playlist() -> io::Result<Vec<PathBuf>> {
 
     let musics_dir = args.get(1).map(String::as_str).unwrap_or("./musics");
 
+    let audio_extensions = [
+        "mp3", "wav", "flac", "aac", "ogg", 
+        "m4a", "wma", "alac", "ape", "opus"
+    ];
+
     let playlist: Vec<PathBuf> = fs::read_dir(musics_dir)?
-        .flat_map(|res| res.map(|e| e.path()).ok())
+        .filter_map(|res| res.ok().map(|e| e.path()))
+        .filter(|path| {
+            if !path.is_file() {
+                return false;
+            }
+
+            if let Some(ext) = path.extension() {
+                if let Some(ext_str) = ext.to_str() {
+                    let ext_lower = ext_str.to_lowercase();
+                    return audio_extensions.contains(&ext_lower.as_str());
+                }
+            }
+            false
+        })
         .collect();
     Ok(playlist)
 }
