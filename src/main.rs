@@ -240,6 +240,9 @@ fn do_action(action: Option<Action>, app: &mut App, player: &Player) {
                 app.update(Action::Delete);
                 app.refresh_playlist(get_playlist().unwrap());
             }
+            Some(Action::RefreshPlaylist) => {
+                app.refresh_playlist(get_playlist().unwrap());
+            }
             Some(action) => {
                 app.update(action);
             }

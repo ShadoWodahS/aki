@@ -1,5 +1,4 @@
 use std::time::Duration;
-
 use crossterm::event::{KeyCode, KeyEvent};
 
 pub enum Action {
@@ -24,8 +23,8 @@ pub enum Action {
     SearchNext(bool),
     SearchPrev,
     Delete,
+    RefreshPlaylist,
 }
-
 pub fn map_key(key: KeyEvent) -> Option<Action> {
     match key.code {
         KeyCode::Char('q') => Some(Action::Quit),
@@ -40,6 +39,7 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('n') => Some(Action::SearchNext(true)),
         KeyCode::Char('N') => Some(Action::SearchPrev),
         KeyCode::Char('d') => Some(Action::Delete),
+        KeyCode::Char('r') => Some(Action::RefreshPlaylist),
         _ => None,
     }
 }

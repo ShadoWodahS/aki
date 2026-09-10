@@ -306,6 +306,7 @@ impl App {
                 }
                 self.selected_song_index = if self.selected_song_index > 0 { self.selected_song_index - 1 } else { 0 };
             }
+
             _ => {}
         }
     }
