@@ -21,7 +21,7 @@ use crate::action::{
     map_key, map_key_in_search_mode,
 };
 mod app;
-use crate::app::App;
+use crate::app::{App, PlayMode};
 
 fn get_playlist() -> io::Result<Vec<PathBuf>> {
     let args: Vec<String> = env::args().collect();
@@ -131,9 +131,16 @@ fn draw(frame: &mut Frame, app: &App) {
 
     let status = if app.is_playing() { "▶️" } else { "⏯️" };
 
+    let play_mode = match app.play_mode() {
+        PlayMode::RepeatAll => "🔁",
+        PlayMode::ShuffleAll => "🔀",
+        PlayMode::RepeatOne => "🔂",
+    };
+    
     let status = format!(
-        "{}   {:02}:{:02}/{:02}:{:02}",
+        "{} {} {:02}:{:02}/{:02}:{:02}",
         status,
+        play_mode,
         current_secs / 60,
         current_secs % 60,
         total_secs / 60,

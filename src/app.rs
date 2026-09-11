@@ -1,6 +1,25 @@
 use std::{path::PathBuf, time::Duration};
+use rand::seq::SliceRandom;
+use rand::rng;
 
 use crate::action::Action::{self};
+
+#[derive(PartialEq)]
+pub enum PlayMode {
+    RepeatAll,
+    ShuffleAll,
+    RepeatOne,
+}
+
+impl PlayMode {
+    fn next(&self) -> Self {
+        match self {
+            PlayMode::RepeatAll => PlayMode::ShuffleAll,
+            PlayMode::ShuffleAll => PlayMode::RepeatOne,
+            PlayMode::RepeatOne => PlayMode::RepeatAll,
+        }
+    }
+}
 
 pub struct App {
     should_quit: bool,
@@ -14,6 +33,8 @@ pub struct App {
     search_str: Option<String>,
     is_searching: bool,
     search_match_indexes: Option<Vec<usize>>,
+    play_mode: PlayMode,
+    remaining_playlist: Vec<PathBuf>,
 }
 
 impl App {
@@ -30,7 +51,14 @@ impl App {
             search_str: None,
             is_searching: false,
             search_match_indexes: None,
+            play_mode: PlayMode::RepeatAll,
+            remaining_playlist: Vec::new(),
         }
+    }
+
+    fn gen_remaining_playlist(&mut self) {
+        self.remaining_playlist = self.playlist.clone();
+        self.remaining_playlist.shuffle(&mut rng());
     }
 
     pub fn refresh_playlist(&mut self, playlist: Vec<PathBuf>) {
@@ -57,6 +85,7 @@ impl App {
         }
 
         self.playlist = playlist;
+        self.gen_remaining_playlist();
     }
 
     pub fn is_playing(&self) -> bool {
@@ -110,6 +139,10 @@ impl App {
         }
     }
 
+    pub fn play_mode(&self) -> &PlayMode {
+        &self.play_mode
+    }
+
     pub fn update(&mut self, action: Action) {
         match action {
             Action::Quit => {
@@ -143,10 +176,27 @@ impl App {
 
             Action::PlayNext => match self.playing_song_index {
                 Some(playing_song_index) => {
-                    self.playing_song_index = if playing_song_index + 1 == self.playlist.len() {
-                        Some(0)
-                    } else {
-                        Some(playing_song_index + 1)
+                    match self.play_mode {
+                        PlayMode::RepeatAll => {
+                            self.playing_song_index = if playing_song_index + 1 == self.playlist.len() {
+                                Some(0)
+                            } else {
+                                Some(playing_song_index + 1)
+                            }
+                        },
+                        PlayMode::ShuffleAll => {
+                            if self.remaining_playlist.is_empty() {
+                                self.gen_remaining_playlist();
+                            }
+                            if let Some(path) = self.remaining_playlist.pop() {
+                                self.playing_song_index = self.playlist.iter().position(|p| p == &path);
+                                if let Some(index) = self.playing_song_index {
+                                    // We should set selected_song_index cause user maybe can't find playing_song in screen
+                                    self.selected_song_index = index;
+                                }
+                            }
+                        },
+                        PlayMode::RepeatOne => {},
                     }
                 }
                 _ => {}
@@ -305,6 +355,13 @@ impl App {
                     self.is_playing = false;
                 }
                 self.selected_song_index = if self.selected_song_index > 0 { self.selected_song_index - 1 } else { 0 };
+            }
+
+            Action::CyclePlayMode => {
+                self.play_mode = self.play_mode.next();
+                if self.play_mode == PlayMode::ShuffleAll {
+                    self.gen_remaining_playlist();
+                }
             }
 
             _ => {}

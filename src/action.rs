@@ -24,6 +24,7 @@ pub enum Action {
     SearchPrev,
     Delete,
     RefreshPlaylist,
+    CyclePlayMode,
 }
 pub fn map_key(key: KeyEvent) -> Option<Action> {
     match key.code {
@@ -40,6 +41,7 @@ pub fn map_key(key: KeyEvent) -> Option<Action> {
         KeyCode::Char('N') => Some(Action::SearchPrev),
         KeyCode::Char('d') => Some(Action::Delete),
         KeyCode::Char('r') => Some(Action::RefreshPlaylist),
+        KeyCode::Char('m') => Some(Action::CyclePlayMode),
         _ => None,
     }
 }
