@@ -248,7 +248,7 @@ impl App {
                         .enumerate()
                         .filter(|(_, path)| {
                             if let Some(path_str) = path.to_str() {
-                                path_str.contains(search_str.as_str())
+                                path_str.to_lowercase().contains(&search_str.as_str().to_lowercase())
                             } else {
                                 false
                             }
