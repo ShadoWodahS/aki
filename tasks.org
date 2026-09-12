@@ -1,0 +1,4 @@
+* TODO TASKS [0/1]
+  - [ ] Replay Gain
+    1. Scan All the songs in background with multiple cores when run application. Generate ReplayGain and add to origin song's file.
+    2. Read the ReplayGain tag from file, set volumn for rodio.
