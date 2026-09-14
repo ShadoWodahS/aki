@@ -1,4 +1,10 @@
-* TODO TASKS [0/1]
+* TODO TASKS [0/5]
   - [ ] Replay Gain
     1. Scan All the songs in background with multiple cores when run application. Generate ReplayGain and add to origin song's file.
     2. Read the ReplayGain tag from file, set volumn for rodio.
+  - [ ] Support Folder
+    1. Read all folders recursion.
+    2. Should we support folders in aki UI? Or we just get and show all the songs?
+  - [ ] Lyrics
+  - [ ] Support Some Playlist
+  - [ ] Spectrum Animation
